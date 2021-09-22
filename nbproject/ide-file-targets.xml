@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir=".." name="ImageJ-IDE">
+    <target name="compile-selected-files-in-plugins">
+        <fail unless="files">Must set property 'files'</fail>
+        <javac destdir="plugins" includes="${files}" source="1.7" srcdir="plugins">
+            <classpath path="ij.jar;jiffy_jar;"/>
+        </javac>
+    </target>
+    <target name="compile-selected-files-in-src">
+        <fail unless="files">Must set property 'files'</fail>
+        <!-- TODO decide on and define some value for ${build.classes.dir} -->
+        <mkdir dir="${build.classes.dir}"/>
+        <javac destdir="${build.classes.dir}" includes="${files}" source="1.8" srcdir="src"/>
+    </target>
+    <target name="compile-selected-files-in-opencv_453">
+        <fail unless="files">Must set property 'files'</fail>
+        <javac destdir="opencv_453" includes="${files}" source="1.8" srcdir="opencv_453"/>
+    </target>
+</project>
