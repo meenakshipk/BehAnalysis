@@ -457,6 +457,7 @@ public class Scoring_Assistant extends java.awt.Frame implements MouseListener, 
                 win.removeKeyListener(IJ.getInstance());
                 win.addKeyListener(this);
                 ImageCanvas canvas = imp.getCanvas();
+                int i = 1;
                 canvas.disablePopupMenu(true);
                 if (canvas != previousCanvas) {
                     if (previousCanvas != null) {
