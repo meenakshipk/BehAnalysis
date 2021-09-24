@@ -1,5 +1,5 @@
 #ImageJ 1.53k Preferences
-#Tue Sep 21 16:43:13 IST 2021
+#Fri Sep 24 12:52:35 IST 2021
 showcolor=\#00FFFF
 prefs.options=16416
 div-by-zero=Infinity
@@ -9,6 +9,7 @@ fcolor=\#000000
 raw.height=512
 raw.width=512
 new.fill=0
+.log.height=250
 raw.type=0
 new.slices=1
 jpeg=75
@@ -25,6 +26,7 @@ bcolor=\#FFFFFF
 .avi.reader.path=C\:\\Users\\Meenakshi\\Desktop\\opencv_trial\\output_mjpeg.avi
 new.height=400
 fps=7.0
+.log.loc=483,129
 pp.fontsize=14
 new.type=0
 raw.options=0
@@ -35,6 +37,7 @@ prefs.options2=2
 new.width=400
 roicolor=\#FFFF00
 .results.height=250
+.log.width=400
 menu.size=15
 raw.offset=0
 pp.options=0
