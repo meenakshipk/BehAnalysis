@@ -417,7 +417,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         OverAllProgressBar.setMinimum(0);
         OverAllProgressBar.setMaximum((int) vr.totalFrames);
         OverAllProgressBar.setValue(imp.getCurrentSlice());
-
+        
         SeqProgress.setMinimum(0);
         SeqProgress.setMaximum(nFrames); //should this be nFrames or advance?
 
@@ -670,8 +670,9 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
             }
             System.out.println("SR chunkready = TRUE" + vr.isNextChunkReady());
             this.deletePreChunk(); //private method of scoring assistant that deletes the first buffsize number of slices.
-            cSlice = cSlice - buffFrames;
+            
             this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that deletes the first buffsize number of slices.
+            cSlice = cSlice - vr.getNextChunk().length;
             imp.setSlice(cSlice);
 //           return;
             // nFrames = Stack.getSize();
@@ -732,6 +733,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                 return;
             }
             Stack.addSlice(nextChunk[i]);
+           // Stack.trim();
         }
     }
 
