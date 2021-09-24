@@ -32,10 +32,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -69,9 +71,11 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
     private boolean kFlag = false;
     private boolean reentry = false;
     private VideoReader vr = null;
-    private long memSize;
-    private double mainChunkSize;
-    private double buffSize;
+//    private long memSize;
+//    private double mainChunkSize;
+    private int buffFrames;
+    static boolean runningStatus = false;
+//    private int frameMax = 0;
 
     /**
      * Creates new form Scoring_Assistant
@@ -370,28 +374,29 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                 // imp = new ImagePlus(ImgFile.getPath());
                 //estimate size of memory available in imagej
                 //initialise buffer size
-                memSize = IJ.maxMemory() - IJ.currentMemory();
-                mainChunkSize = 0.5 * memSize;
-                buffSize = 0.2 * memSize;
-                
-                imp.createEmptyStack();
+                double memSize = IJ.maxMemory() - IJ.currentMemory();
+                double mainChunkSize = 0.5 * memSize;
                 // open file using opencv
                 vr = new VideoReader(ImgFile);
-                Error = !vr.initMainStack();
-                //get ip array and display as imageplus
+                Error = !vr.initMainStack((int) mainChunkSize);
             } else {
                 Error = true;
             }
             if (!Error) {
-                Stack = imp.getImageStack();
+                imp = new ImagePlus();
+                Stack = imp.createEmptyStack();
+                addPostChunk(vr.getNextChunk());
+                imp.setStack(Stack);
                 nFrames = Stack.getSize();
+                buffFrames = (int) (0.4 * nFrames);
+                Calibration cal = imp.getCalibration();
+                cal.fps = vr.fps;
+                System.out.println("imageplus fps: " + imp.getCalibration().fps);
                 imp.show();
             }
         } else {
             Error = true;
         }
-
-
     }//GEN-LAST:event_DataBrowseActionPerformed
 
     private void ResultBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ResultBrowseActionPerformed
@@ -410,11 +415,11 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
 
         Progress.setVisible(true);
         OverAllProgressBar.setMinimum(0);
-        OverAllProgressBar.setMaximum(nFrames);
+        OverAllProgressBar.setMaximum((int) vr.totalFrames);
         OverAllProgressBar.setValue(imp.getCurrentSlice());
 
         SeqProgress.setMinimum(0);
-        SeqProgress.setMaximum(nFrames);
+        SeqProgress.setMaximum(nFrames); //should this be nFrames or advance?
 
         rt = new ResultsTable();
         rt.show("Score");
@@ -488,7 +493,10 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
 
     private void NxtSeqActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NxtSeqActionPerformed
         // TODO add your handling code here:
-        OverAllProgressBar.setValue(imp.getCurrentSlice());
+//        OverAllProgressBar.setValue(imp.getCurrentSlice());
+        int advance = Integer.parseInt(nImgAdv.getText());
+        OverAllProgressBar.setValue(OverAllProgressBar.getValue() + advance);
+
         rt.incrementCounter();
 
         //rt.show("Score");
@@ -566,6 +574,8 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
     public void mouseClicked(MouseEvent e) {
         int row = rt.getCounter();
         //IJ.showMessage("Mouse Active");
+        //is there a current instance 
+        if(!runningStatus){
         if (e.getButton() == e.BUTTON1) {
             rt.setValue("Mouse", row - 1, 1);
         } else if (e.getButton() == e.BUTTON2) {
@@ -574,9 +584,10 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         rt.show("Score");
         if (AutoAdvStat.isSelected()) {
             mFlag = true;
+            runningStatus = true;
             this.NxtSeqActionPerformed(null);
         }
-
+        }
     }
 
     public void mousePressed(MouseEvent e) {
@@ -620,34 +631,50 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
     }
 
     public void run() {
-
         Stack = imp.getStack();
         int cSlice = imp.getCurrentSlice();
 
         // if(cSlice >= nFrames)
         //    return;
         Integer advance = new Integer(nImgAdv.getText());
-        int maxBound = imp.getCurrentSlice() + advance;
-        if (nFrames < maxBound + advance) {
+        if (advance > buffFrames) {
+
+            IJ.showMessage(" Can not advance " + advance + " frames due to limited memory so advancing " + buffFrames);
+            advance = buffFrames;
+            nImgAdv.setText("" + buffFrames);
+        }
+        int maxBound = nFrames - advance;
+        if (cSlice > maxBound - advance && cSlice < maxBound) {
+//        System.out.println("entered nFrames < maxBound + advance if block i.e. fetch next chunk");        
             new Thread(vr).start(); //will fetch the next chunk
         }
-        if (nFrames < maxBound) {
+        if (cSlice >= maxBound) {
+            System.out.println("entered nFrames < maxBound if block");
             if (!vr.isNextChunkReady()) {
+                if (vr.isEOF()) {
+                    return;
+                }
+                System.out.println("SR chunkready = FALSE" + vr.isNextChunkReady());
                 try {
-                    wait(2000); //timeout = 2s
+                    System.out.println("try sleep block");
                     IJ.showStatus("Waiting for next set of video freames.");
+                    Thread.currentThread().wait(5000); //timeout = 5s //thread synchronization issue?
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Scoring_Assistant_0.class.getName()).log(Level.SEVERE, null, ex);
-                    if (!vr.isNextChunkReady()) {
-                        IJ.showStatus("Error fetching video frames.");
-                        ij.IJ.showMessage("Error", "Error fetching video frames. Timed out. ");
-                        return;
-                    }
+                }
+                if (!vr.isNextChunkReady()) {
+                    IJ.showStatus("Error fetching video frames.");
+                    ij.IJ.showMessage("Error", "Error fetching video frames. Timed out. ");
+                    return;
                 }
             }
+            System.out.println("SR chunkready = TRUE" + vr.isNextChunkReady());
             this.deletePreChunk(); //private method of scoring assistant that deletes the first buffsize number of slices.
+            cSlice = cSlice - buffFrames;
             this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that deletes the first buffsize number of slices.
+            imp.setSlice(cSlice);
 //           return;
+            // nFrames = Stack.getSize();
         }
 
         SeqProgress.setMaximum(advance);
@@ -657,6 +684,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         if (cal.fps != 0.0) {
             frameRate = (long) (1000.0 / cal.fps);
         }
+        System.out.print("The fps before advance is " + cal.fps);
         long timeInc = frameRate;
         ImageWindow win = imp.getWindow();
         StackWindow swin = (StackWindow) win;
@@ -666,7 +694,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         long time = System.currentTimeMillis(), nextime = System.currentTimeMillis();
         // long stoptime = timeInc*advance.intValue();
         long timeDiff = nextime - time;
-
+        advance = cSlice + advance > Stack.getSize() ? Stack.getSize() - cSlice : advance;
         for (int count = 0; count <= advance; count++) {
             SeqProgress.setValue(count);
             IJ.showStatus((int) (cal.fps + 0.5) + " fps");
@@ -685,25 +713,29 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                 nextime += timeInc;
             }
             swin.showSlice(cSlice + count);
-
         }
-        OverAllProgressBar.setValue(imp.getCurrentSlice());
+//        OverAllProgressBar.setValue(imp.getCurrentSlice());
+        OverAllProgressBar.setValue(OverAllProgressBar.getValue() + advance);
+        runningStatus = false;
         return;
     }
 
     private void deletePreChunk() {
-        for(int i = 0; i < buffSize; i++){
-            Stack.deleteSlice(i+1);
+        for (int i = 0; i < buffFrames; i++) {
+            Stack.deleteSlice(i + 1);
         }
     }
 
-    private void addPostChunk(ImageProcessor[] nextChunk) {        
-        for(int i = 0; i < buffSize; i++){
+    private void addPostChunk(ImageProcessor[] nextChunk) {
+        for (int i = 0; i < nextChunk.length; i++) {
+            if (nextChunk[i] == null) {
+                return;
+            }
             Stack.addSlice(nextChunk[i]);
         }
     }
 
-      private class VideoReader extends java.awt.Frame implements Runnable {
+    private class VideoReader extends java.awt.Frame implements Runnable {
 
         boolean success = false;
         boolean read = true;
@@ -715,21 +747,34 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         VideoCapture cap = null;
         private ImageProcessor[] ipArr = null;
         boolean chunkReady = false;
+        private boolean eof = false;
         //pixel size and number of pixels
-        
+
         public VideoReader(File ImgFile) {
             System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
             this.openVideo(ImgFile);
+            if (SwingUtilities.isEventDispatchThread()) {
+                System.out.print("This is Event Dispatch Thread");
+            } else {
+                System.out.print("This is not a Event Dispatch Thread");
+            }
         }
 
         @Override
         public void run() {
             //reads next chunk
-            synchronized (this) {chunkReady = false;}
-            if (success && read) {
-            readFrames((int) buffSize);
-            synchronized (this) {chunkReady = true;}
+            synchronized (this) {
+                chunkReady = false;
+                System.out.println("VR chunkready1" + chunkReady);
             }
+            //           if (success && read) {
+            ipArr = new ImageProcessor[buffFrames];
+            readFrames(buffFrames);
+            synchronized (this) {
+                chunkReady = true;
+                System.out.println("VR chunkready2" + chunkReady);
+            }
+            //           }
 //              else {
 //                ij.IJ.showMessage("Error", "Error opening/reading video file.");
 //            }
@@ -749,11 +794,11 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                 posFrame = cap.get(CAP_PROP_POS_FRAMES); //0
                 fps = cap.get(CAP_PROP_FPS); //25
                 totalFrames = cap.get(CAP_PROP_FRAME_COUNT); //3715 <- checks out - got 3700 for 2.28 vid of 25fps         
-                System.out.println("Height: " + height + " width: " + width);
+                System.out.println("Height: " + height + " width: " + width + " FPS: " + fps + "total frame count: " + totalFrames);
                 success = true;
             } else {
-                System.out.println("Error opening video");
                 success = false;
+                //imagej dialog box mentioning error?
             }
         }
 
@@ -769,13 +814,36 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
             return bufImage;
         }
 
-        private boolean initMainStack() {
+        private boolean initMainStack(int mainChunkSize) {
+            if (posFrame != 0) {
+                return false;
+            }
+
+            Mat image = new Mat();
+            BufferedImage buff = null;
+            read = cap.read(image);
+            System.out.println("read: " + read);
+            System.out.println("posFrame: " + posFrame);
+
+            //calculate required number of frames for init stack
+            nFrames = (int) (mainChunkSize / (image.elemSize() * image.width() * image.height()));
+            ipArr = new ImageProcessor[nFrames];
+            //make ip and store it
+            try {
+                buff = Mat2BufferedImage(image);
+            } catch (IOException ex) {
+                Logger.getLogger(Scoring_Assistant_0.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            ImagePlus tempImp = new ImagePlus(String.valueOf(posFrame + 1), buff);
+
+            ipArr[0] = tempImp.getProcessor();
+
             if (success && read) {
-                readFrames((int)mainChunkSize);
+                readFrames(nFrames);
             } else {
                 ij.IJ.showMessage("Error", "Error opening/reading video file.");
                 return false;
-            }            
+            }
             return true;
         }
 
@@ -784,34 +852,35 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         }
 
         private ImageProcessor[] getNextChunk() {
-        return ipArr;
+            return ipArr;
         }
 
-        private void readFrames(int size) {
-           Mat image = null;
-           BufferedImage buff = null;
-           ImagePlus tempImp = null;
-           int frameMax = 0;
+        private void readFrames(int frames) {
+            Mat image = null;
+            BufferedImage buff = null;
+            ImagePlus tempImp = null;
             int idx = 0;
             do {
                 image = new Mat();
                 read = cap.read(image);
-                image.elemSize();
-                try {
-                    buff = Mat2BufferedImage(image);
-                } catch (IOException ex) {
-                    Logger.getLogger(Scoring_Assistant_0.class.getName()).log(Level.SEVERE, null, ex);
+                if (read) {
+                    try {
+                        buff = Mat2BufferedImage(image);
+                    } catch (IOException ex) {
+                        Logger.getLogger(Scoring_Assistant_0.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    tempImp = new ImagePlus(String.valueOf(idx + 1), buff);
+                    ipArr[idx] = tempImp.getProcessor();
+                    idx = idx + 1;
+                    posFrame = cap.get(CAP_PROP_POS_FRAMES);
                 }
-                tempImp = new ImagePlus(String.valueOf(idx), buff);
-                if( posFrame == 0){
-                    frameMax = (int) (size / (image.elemSize() * image.width() * image.height()));
-                    ipArr = new ImageProcessor[frameMax];
-                }                            
-                ipArr[idx] = tempImp.getProcessor();                 
-                idx = idx + 1;
-            } while (idx < frameMax);
-            posFrame = cap.get(CAP_PROP_POS_FRAMES);
+            } while (idx < frames && read);
+            eof = true;
+        }
+
+        private boolean isEOF() {
+            return eof;
         }
     }
-    
+
 }
