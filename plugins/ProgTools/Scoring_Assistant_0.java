@@ -632,35 +632,43 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
     }
 
     public void run() {
+        
         Stack = imp.getStack();
         int cSlice = imp.getCurrentSlice();
-
+                        
+        int nAdded;
         // if(cSlice >= nFrames)
         //    return;
         Integer advance = new Integer(nImgAdv.getText());
+        int maxBound = Stack.getSize() - advance;
+         
         if (advance > buffFrames) {
 
             IJ.showMessage(" Can not advance " + advance + " frames due to limited memory so advancing " + buffFrames);
             advance = buffFrames;
             nImgAdv.setText("" + buffFrames);
         }
-        int maxBound = nFrames - advance;
+       
         if (cSlice >= maxBound - advance && cSlice < maxBound) {
-//        System.out.println("entered nFrames < maxBound + advance if block i.e. fetch next chunk");        
-            new Thread(vr).start(); //will fetch the next chunk
+//        System.out.println("entered nFrames < maxBound + advance if block i.e. fetch next chunk");  
+            if (vr.isEOF()) {
+                    System.out.println("End of File Reached");          //not a good idea to return it will terminate early
+                   // return;
+                }else
+                    new Thread(vr).start(); //will fetch the next chunk
         }
         if (cSlice >= maxBound) {
-            System.out.println("entered nFrames < maxBound if block");
+            System.out.println("entered nFrames > maxBound if block");
             if (!vr.isNextChunkReady()) {
                 if (vr.isEOF()) {
-                    System.out.println("End of File Reached");
+                    System.out.println("End of File Reached check at position 1");
                     return;
                 }
                 System.out.println("SR chunkready = FALSE" + vr.isNextChunkReady());
                 try {
                     System.out.println("try sleep block");
                     IJ.showStatus("Waiting for next set of video freames.");
-                    Thread.currentThread().wait(5000); //timeout = 5s //thread synchronization issue?
+                    Thread.currentThread().wait(1000); //timeout =1s //thread synchronization issue?
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Scoring_Assistant_0.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -671,16 +679,27 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                 }
             }
             System.out.println("SR chunkready = TRUE" + vr.isNextChunkReady());
-            this.deletePreChunk(); //private method of scoring assistant that deletes the first buffsize number of slices.
+            int oldcSlice = cSlice;
+            int nDelSlices = this.deletePreChunk(); //private method of scoring assistant that deletes the first buffsize number of slices.
             System.out.println("Deleted the prechunck");
-            this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that adds  buffsize number of or remiang of slices.
-            cSlice = cSlice - buffFrames;
-            System.out.println("Old cSlice = "+ (cSlice+buffFrames) +"New cSlice= "+ cSlice + " Stack size = " + imp.getStackSize());
-            imp.setSlice(cSlice);
+            //imp.trimProcessor();
+            //imp.updateAndRepaintWindow();
+            cSlice -= nDelSlices;
+            nAdded =  this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that adds  buffsize number of or remiang of slices.
+            if (vr.isEOF()) {
+                    System.out.println("End of File Reached check at position 2");          //not a good idea to return it will terminate early
+                   // return;
+                }
+            new Thread(vr).start(); //will fetch the next chunk
+            //cSlice = (cSlice > imp.getStackSize()) ? imp.getStackSize() : cSlice;
+            System.out.println("Del Slice = "+ nDelSlices + "of the " + oldcSlice +"New index= "+ cSlice 
+                       + " New Stack size = " + imp.getStackSize()+ "No of addedslices = " + nAdded + "Discrepancy="+ ((nAdded - nDelSlices + oldcSlice) - imp.getStackSize()));
+           // imp.setSlice(cSlice);
+            
 //           return;
             // nFrames = Stack.getSize();
         }
-
+        
         SeqProgress.setMaximum(advance);
 
         Calibration cal = imp.getCalibration();
@@ -688,7 +707,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         if (cal.fps != 0.0) {
             frameRate = (long) (1000.0 / cal.fps);
         }
-        System.out.print("The fps before advance is " + cal.fps);
+        //System.out.print("The fps before advance is " + cal.fps);
         long timeInc = frameRate;
         ImageWindow win = imp.getWindow();
         StackWindow swin = (StackWindow) win;
@@ -699,7 +718,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         // long stoptime = timeInc*advance.intValue();
         long timeDiff = nextime - time;
         int StackSize = Stack.getSize();
-        advance = cSlice + advance > StackSize ? StackSize - cSlice : advance;
+        advance = cSlice + advance >= StackSize ? StackSize - cSlice : advance;
         SeqProgress.setMaximum(advance);
         for (int count = 0; count < advance; count++) {
             SeqProgress.setValue(count);
@@ -726,25 +745,28 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         return;
     }
 
-    private void deletePreChunk() {
-        if(buffFrames < Stack.getSize()){
-            for (int i = 0; i < buffFrames; i++) {
-                Stack.deleteSlice(i + 1);
-            }
-        }
-        
+    private int deletePreChunk() {
+       int maxSlice = Stack.getSize();
+       int nSlices2Del = buffFrames > maxSlice  ?  maxSlice : buffFrames ;
+       int count;
+       for( count = 0 ; count < nSlices2Del ; count ++ )
+                  Stack.deleteSlice(count + 1);     //count + 1 shifts the counter to slice number (starts with 1)
+       //imp.trimProcessor();
+       imp.setStack(Stack);
+       return count;
     }
 
-    private void addPostChunk(ImageProcessor[] nextChunk) {
-        for (int i = 0; i < nextChunk.length; i++) {
-            if (nextChunk[i] == null) {
-               
-                return;
+    private int  addPostChunk(ImageProcessor[] nextChunk) {
+        int i;
+        //imp.trimProcessor();
+        for (i = 0; i < nextChunk.length; i++) {
+            if (nextChunk[i] == null) {              
+                return i;
             }
             Stack.addSlice(nextChunk[i]);
-           // Stack.trim();
         }
-        //Stack.trim();
+        imp.setStack(Stack);
+        return i;
     }
 
     private class VideoReader extends java.awt.Frame implements Runnable {
@@ -775,22 +797,29 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         @Override
         public void run() {
             //reads next chunk
-            synchronized (this) {
-                chunkReady = false;
-                System.out.println("VR chunkready1" + chunkReady);
-            }
-            //           if (success && read) {
-            ipArr = new ImageProcessor[buffFrames];
-            readFrames(buffFrames);
-            synchronized (this) {
-                chunkReady = true;
-                System.out.println("VR chunkready2" + chunkReady);
-            }
-            //           }
-//              else {
-//                ij.IJ.showMessage("Error", "Error opening/reading video file.");
-//            }
+           if(!isEOF()){
+                synchronized (this) {
+                    chunkReady = false;
+                    System.out.println("VR chunkready1" + chunkReady);
+                }
+                //           if (success && read) {
+                ipArr = new ImageProcessor[buffFrames];
+                readFrames(buffFrames);
+                synchronized (this) {
+                    chunkReady = true;
+                    System.out.println("VR chunkready2" + chunkReady);
+                }
+                //           }
+    //              else {
+    //                ij.IJ.showMessage("Error", "Error opening/reading video file.");
+    //            }
 
+            }else{
+               synchronized (this) {
+                    chunkReady = false;
+                    System.out.println("VR chunkready1" + chunkReady);
+                }
+           }
         }
 
         public void openVideo(File ImgFile) {
@@ -864,6 +893,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         }
 
         private ImageProcessor[] getNextChunk() {
+            
             return ipArr;
         }
 
