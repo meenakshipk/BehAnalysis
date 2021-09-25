@@ -388,7 +388,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                 addPostChunk(vr.getNextChunk());
                 imp.setStack(Stack);
                 nFrames = Stack.getSize();
-                buffFrames = (int) (0.4 * nFrames);
+                buffFrames = (int) (0.4 * nFrames);     //effectively buffersize is 0.2 of memsize
                 Calibration cal = imp.getCalibration();
                 cal.fps = vr.fps;
                 System.out.println("imageplus fps: " + imp.getCalibration().fps);
@@ -419,7 +419,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         OverAllProgressBar.setValue(imp.getCurrentSlice());
         
         SeqProgress.setMinimum(0);
-        SeqProgress.setMaximum(nFrames); //should this be nFrames or advance?
+        SeqProgress.setMaximum(buffFrames); //should this be nFrames or advance?
 
         rt = new ResultsTable();
         rt.show("Score");
@@ -494,8 +494,8 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
     private void NxtSeqActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NxtSeqActionPerformed
         // TODO add your handling code here:
 //        OverAllProgressBar.setValue(imp.getCurrentSlice());
-        int advance = Integer.parseInt(nImgAdv.getText());
-        OverAllProgressBar.setValue(OverAllProgressBar.getValue() + advance);
+       // int advance = Integer.parseInt(nImgAdv.getText());
+       // OverAllProgressBar.setValue(OverAllProgressBar.getValue() + advance);
 
         rt.incrementCounter();
 
@@ -576,17 +576,17 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         //IJ.showMessage("Mouse Active");
         //is there a current instance 
         if(!runningStatus){
-        if (e.getButton() == e.BUTTON1) {
-            rt.setValue("Mouse", row - 1, 1);
-        } else if (e.getButton() == e.BUTTON2) {
-            rt.setValue("Mouse", row - 1, 0);
-        }
-        rt.show("Score");
-        if (AutoAdvStat.isSelected()) {
-            mFlag = true;
-            runningStatus = true;
-            this.NxtSeqActionPerformed(null);
-        }
+            if (e.getButton() == e.BUTTON1) {
+                rt.setValue("Mouse", row - 1, 1);
+            } else if (e.getButton() == e.BUTTON2) {
+                rt.setValue("Mouse", row - 1, 0);
+            }
+            rt.show("Score");
+            if (AutoAdvStat.isSelected()) {
+                mFlag = true;
+                runningStatus = true;
+                this.NxtSeqActionPerformed(null);
+            }
         }
     }
 
@@ -616,7 +616,8 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         rt.show("Score");
         if (AutoAdvStat.isSelected()) {
             kFlag = true;
-            this.NxtSeqActionPerformed(null);
+             runningStatus = true;
+            if (!runningStatus) this.NxtSeqActionPerformed(null);
         }
 
     }
@@ -644,7 +645,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
             nImgAdv.setText("" + buffFrames);
         }
         int maxBound = nFrames - advance;
-        if (cSlice > maxBound - advance && cSlice < maxBound) {
+        if (cSlice >= maxBound - advance && cSlice < maxBound) {
 //        System.out.println("entered nFrames < maxBound + advance if block i.e. fetch next chunk");        
             new Thread(vr).start(); //will fetch the next chunk
         }
@@ -652,6 +653,7 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
             System.out.println("entered nFrames < maxBound if block");
             if (!vr.isNextChunkReady()) {
                 if (vr.isEOF()) {
+                    System.out.println("End of File Reached");
                     return;
                 }
                 System.out.println("SR chunkready = FALSE" + vr.isNextChunkReady());
@@ -670,9 +672,10 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
             }
             System.out.println("SR chunkready = TRUE" + vr.isNextChunkReady());
             this.deletePreChunk(); //private method of scoring assistant that deletes the first buffsize number of slices.
-            
-            this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that deletes the first buffsize number of slices.
-            cSlice = cSlice - vr.getNextChunk().length;
+            System.out.println("Deleted the prechunck");
+            this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that adds  buffsize number of or remiang of slices.
+            cSlice = cSlice - buffFrames;
+            System.out.println("Old cSlice = "+ (cSlice+buffFrames) +"New cSlice= "+ cSlice + " Stack size = " + imp.getStackSize());
             imp.setSlice(cSlice);
 //           return;
             // nFrames = Stack.getSize();
@@ -695,8 +698,10 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
         long time = System.currentTimeMillis(), nextime = System.currentTimeMillis();
         // long stoptime = timeInc*advance.intValue();
         long timeDiff = nextime - time;
-        advance = cSlice + advance > Stack.getSize() ? Stack.getSize() - cSlice : advance;
-        for (int count = 0; count <= advance; count++) {
+        int StackSize = Stack.getSize();
+        advance = cSlice + advance > StackSize ? StackSize - cSlice : advance;
+        SeqProgress.setMaximum(advance);
+        for (int count = 0; count < advance; count++) {
             SeqProgress.setValue(count);
             IJ.showStatus((int) (cal.fps + 0.5) + " fps");
 
@@ -722,19 +727,24 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
     }
 
     private void deletePreChunk() {
-        for (int i = 0; i < buffFrames; i++) {
-            Stack.deleteSlice(i + 1);
+        if(buffFrames < Stack.getSize()){
+            for (int i = 0; i < buffFrames; i++) {
+                Stack.deleteSlice(i + 1);
+            }
         }
+        
     }
 
     private void addPostChunk(ImageProcessor[] nextChunk) {
         for (int i = 0; i < nextChunk.length; i++) {
             if (nextChunk[i] == null) {
+               
                 return;
             }
             Stack.addSlice(nextChunk[i]);
            // Stack.trim();
         }
+        //Stack.trim();
     }
 
     private class VideoReader extends java.awt.Frame implements Runnable {
@@ -877,8 +887,9 @@ public class Scoring_Assistant_0 extends java.awt.Frame implements MouseListener
                     posFrame = cap.get(CAP_PROP_POS_FRAMES);
                 }
             } while (idx < frames && read);
-            eof = true;
+            eof = !read;
         }
+        
 
         private boolean isEOF() {
             return eof;
