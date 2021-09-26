@@ -123,6 +123,23 @@
                         </arity>
                     </context>
                 </action>
+                <action name="debug">
+                    <script>nbproject/ide-targets.xml</script>
+                    <target>debug-nb</target>
+                </action>
+                <action name="debug.single">
+                    <script>nbproject/ide-file-targets.xml</script>
+                    <target>debug-selected-file-in-plugins</target>
+                    <context>
+                        <property>debug.class</property>
+                        <folder>plugins</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
             </ide-actions>
             <view>
                 <items>
@@ -152,6 +169,7 @@
                         <label>Clean plugins</label>
                         <target>clean</target>
                     </action>
+                    <ide-action name="debug"/>
                 </context-menu>
             </view>
             <subprojects/>
