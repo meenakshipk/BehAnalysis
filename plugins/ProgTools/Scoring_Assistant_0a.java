@@ -703,7 +703,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             if(sizeDiff > 0){
                 nDelSlices = this.deletePreChunk(sizeDiff); //private method of scoring assistant that deletes the sizeDiff number of slices.
                 System.out.println("Deleted the prechunck");
-                cSlice = imp.getCurrentSlice();//-= nDelSlices;
+                cSlice =  cSlice -= nDelSlices;
                 System.out.println("Finished deleting the slices " + imp.getStackSize() + "from Stack " + Stack.getSize());
             }
             nAdded =  this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that adds  buffsize number of or remiang of slices.
@@ -724,7 +724,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         long time = System.currentTimeMillis(), nextime = System.currentTimeMillis();
         // long stoptime = timeInc*advance.intValue();
         long timeDiff = nextime - time;
-        cSlice = imp.getCurrentSlice();
+       
         StackSz = imp.getStackSize();
         advance = ((cSlice + advance) >= StackSz ) ? StackSz - cSlice : advance;
         SeqProgress.setMaximum(advance);
