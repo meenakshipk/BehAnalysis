@@ -703,7 +703,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             if(sizeDiff > 0){
                 nDelSlices = this.deletePreChunk(sizeDiff); //private method of scoring assistant that deletes the sizeDiff number of slices.
                 System.out.println("Deleted the prechunck");
-                cSlice =  cSlice -= nDelSlices;
+                cSlice -= nDelSlices;
                 System.out.println("Finished deleting the slices " + imp.getStackSize() + "from Stack " + Stack.getSize());
             }
             nAdded =  this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that adds  buffsize number of or remiang of slices.
