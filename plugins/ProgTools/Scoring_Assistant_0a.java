@@ -724,7 +724,8 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         long time = System.currentTimeMillis(), nextime = System.currentTimeMillis();
         // long stoptime = timeInc*advance.intValue();
         long timeDiff = nextime - time;
-        int StackSize = Stack.getSize();
+        cSlice = imp.getCurrentSlice();
+        StackSz = imp.getStackSize();
         advance = ((cSlice + advance) >= StackSz ) ? StackSz - cSlice : advance;
         SeqProgress.setMaximum(advance);
         
