@@ -11,17 +11,14 @@ package ProgTools;
  * Created on Apr 19, 2011, 4:48:42 PM
  */
 import ij.IJ;
-import ij.ImageListener;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
 import ij.gui.StackWindow;
 import ij.measure.Calibration;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
-import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -32,7 +29,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -48,7 +44,6 @@ import static org.opencv.videoio.Videoio.CAP_PROP_FPS;
 import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_COUNT;
 import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_HEIGHT;
 import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
-import static org.opencv.videoio.Videoio.CAP_PROP_POS_FRAMES;
 
 /**
  *
@@ -77,7 +72,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
     static boolean runningStatus = false;
 //    private int frameMax = 0;
     private boolean scoringDone = false;
-
+    private int nAdded = 0;
     /**
      * Creates new form Scoring_Assistant
      */
@@ -128,7 +123,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         SubBgd = new javax.swing.JButton();
 
         Progress.setTitle("Progress..");
-        Progress.setBounds(new java.awt.Rectangle(0, 0, 300, 250));
+        Progress.setBounds(new java.awt.Rectangle(0, 0, 450, 250));
 
         jLabel6.setText("Over All Progress");
 
@@ -359,7 +354,8 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
      * Exit the Application
      */
     private void exitForm(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_exitForm
-        System.exit(0);
+       // System.exit(0);
+       this.dispose();
     }//GEN-LAST:event_exitForm
 
     private void DataBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DataBrowseActionPerformed
@@ -583,18 +579,21 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
     private javax.swing.JTextField nImgs;
     private javax.swing.JSpinner nPeople;
     // End of variables declaration//GEN-END:variables
-    private int nAdded = 0;
+
     public void mouseClicked(MouseEvent e) {
          int row = rt.getCounter();
          
                  //IJ.showMessage("Mouse Active");
                  //is there a current instance 
                 if(!runningStatus /*&& !scoringDone*/){
+
                     if (e.getButton() == e.BUTTON1) {
-                        rt.setValue("Mouse", row - 1, 1);
+                        rt.setValue("Response", row - 1, 1);
                     } else if (e.getButton() == e.BUTTON2) {
-                        rt.setValue("Mouse", row - 1, 0);
+                        rt.setValue("Response", row - 1, 0);                    
                     }
+                        rt.setValue("Frame", row - 1, imp.getCurrentSlice());
+                    
                     rt.show("Score");
                     if (AutoAdvStat.isSelected()) {
                         mFlag = true;
@@ -847,27 +846,6 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
 
     private class VideoReader extends java.awt.Frame implements Runnable {
 
-        /**
-         * @return the totalFrames
-         */
-        public synchronized double getTotalFrames() {
-            return totalFrames;
-        }
-
-        /**
-         * @return the posFrame
-         */
-        public synchronized double getPosFrame() {
-            return posFrame;
-        }
-
-        /**
-         * @param posFrame the posFrame to set
-         */
-        public synchronized void setPosFrame(double posFrame) {
-            this.posFrame = posFrame;
-        }
-
         boolean success = false;
         boolean read = true;
         double height = 0.0;
@@ -879,6 +857,8 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         private ImageProcessor[] ipArr = null;
         private boolean chunkReady = false;
         private boolean eof = false;
+        int framesinBuff = 0;
+
         //pixel size and number of pixels
 
         public VideoReader(File ImgFile) {
@@ -1016,8 +996,8 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         /**
          * This method utilizes the cap method in OpenCv to reads the video clip  one frame at a time and adds them to imageProcessor array. 
          * The user calls the function with a request for the number of frames to be read. The actual number of frames read is returned by the method. 
-         * Actual number of frames returned could be different if the reading terminates due to an error encountered in Cap object(reading method of OPenCV)
-         * or reaching the EOF before being able to read the requested number of frames. The method sets the eof flag in the 
+         * Actual number of frames returned could be different if the reading terminates due to an error encountered in Cap object(reading method of OpenCV)
+         * or reaching the EOF before being able to read the requested number of frames. The method sets the eof flag. 
          * 
          * @param frames Number of frames requested for reading
          * @return Number of frames read 
@@ -1094,11 +1074,32 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             posFrame++;
            // throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
-        int framesinBuff = 0;
+        
         public int getframesAdded() {
            
             return framesinBuff;
             //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        
+                /**
+         * @return the totalFrames
+         */
+        public synchronized double getTotalFrames() {
+            return totalFrames;
+        }
+
+        /**
+         * @return the posFrame
+         */
+        public synchronized double getPosFrame() {
+            return posFrame;
+        }
+
+        /**
+         * @param posFrame the posFrame to set
+         */
+        public synchronized void setPosFrame(double posFrame) {
+            this.posFrame = posFrame;
         }
     }
 

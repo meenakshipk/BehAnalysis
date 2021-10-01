@@ -30,23 +30,28 @@
             </folders>
             <ide-actions>
                 <action name="build">
+                    <script>nbproject/nbjdk.xml</script>
                     <target>build</target>
                 </action>
                 <action name="clean">
+                    <script>nbproject/nbjdk.xml</script>
                     <target>clean</target>
                 </action>
                 <action name="javadoc">
+                    <script>nbproject/nbjdk.xml</script>
                     <target>javadocs</target>
                 </action>
                 <action name="run">
+                    <script>nbproject/nbjdk.xml</script>
                     <target>run</target>
                 </action>
                 <action name="rebuild">
+                    <script>nbproject/nbjdk.xml</script>
                     <target>clean</target>
                     <target>build</target>
                 </action>
                 <action name="compile.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile-selected-files-in-plugins</target>
                     <context>
                         <property>files</property>
@@ -59,7 +64,7 @@
                     </context>
                 </action>
                 <action name="compile.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile-selected-files-in-src</target>
                     <context>
                         <property>files</property>
@@ -72,7 +77,7 @@
                     </context>
                 </action>
                 <action name="compile.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile-selected-files-in-plugins</target>
                     <context>
                         <property>files</property>
@@ -85,7 +90,7 @@
                     </context>
                 </action>
                 <action name="compile.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile-selected-files-in-opencv_453</target>
                     <context>
                         <property>files</property>
@@ -98,7 +103,7 @@
                     </context>
                 </action>
                 <action name="compile.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile-selected-files-in-opencv_453</target>
                     <context>
                         <property>files</property>
@@ -111,7 +116,7 @@
                     </context>
                 </action>
                 <action name="compile.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>compile-selected-files-in-opencv_453</target>
                     <context>
                         <property>files</property>
@@ -124,11 +129,11 @@
                     </context>
                 </action>
                 <action name="debug">
-                    <script>nbproject/ide-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>debug-nb</target>
                 </action>
                 <action name="debug.single">
-                    <script>nbproject/ide-file-targets.xml</script>
+                    <script>nbproject/nbjdk.xml</script>
                     <target>debug-selected-file-in-plugins</target>
                     <context>
                         <property>debug.class</property>
