@@ -1,5 +1,5 @@
 #ImageJ 1.53k Preferences
-#Fri Oct 01 12:46:10 IST 2021
+#Fri Oct 01 15:28:11 IST 2021
 showcolor=\#00FFFF
 prefs.options=16416
 div-by-zero=Infinity
@@ -28,6 +28,7 @@ new.height=400
 fps=25.0
 .log.loc=483,129
 pp.fontsize=14
+dir.image=C\:\\Users\\Meenakshi_NDL\\Desktop\\New Folder\\
 new.type=0
 raw.options=0
 .javac.target=4
