@@ -73,6 +73,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
 //    private int frameMax = 0;
     private boolean scoringDone = false;
     private int nAdded = 0;
+    private int currFramePosition;
 
     /**
      * Creates new form Scoring_Assistant
@@ -410,7 +411,8 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         Progress.setVisible(true);
         OverAllProgressBar.setMinimum(0);
         OverAllProgressBar.setMaximum((int) vr.getTotalFrames());
-        OverAllProgressBar.setValue(imp.getCurrentSlice());
+        currFramePosition = imp.getCurrentSlice();
+        OverAllProgressBar.setValue(currFramePosition);
 
         SeqProgress.setMinimum(0);
         SeqProgress.setMaximum(buffFrames); //should this be nFrames or advance?
@@ -594,11 +596,11 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         //IJ.showMessage("Mouse Active");
         //is there a current instance 
         if (!runningStatus /*&& !scoringDone*/) {
-            rt.setValue("Frame", row - 1, imp.getCurrentSlice());
+            rt.setValue("Frame", row - 1, currFramePosition);
             if (e.getButton() == e.BUTTON1) {
-                rt.setValue("Response", row - 1, 1);
+                rt.setValue("Mouse Response", row - 1, 1);
             } else if (e.getButton() == e.BUTTON2) {
-                rt.setValue("Response", row - 1, 0);
+                rt.setValue("Mouse Response", row - 1, 0);
             }
             rt.show("Score");
             if (AutoAdvStat.isSelected()) {
@@ -628,10 +630,11 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
 
     public void keyTyped(KeyEvent e) {
         int row = rt.getCounter();
+            rt.setValue("Frame", row - 1, currFramePosition);
         if (e.getKeyChar() == 'y' || e.getKeyChar() == 'Y') {
-            rt.setValue("Key", row - 1, 1);
+            rt.setValue("Key Response", row - 1, 1);
         } else {
-            rt.setValue("Key", row - 1, 0);
+            rt.setValue("KeyResponse", row - 1, 0);
         }
         rt.show("Score");
         if (AutoAdvStat.isSelected()) {
@@ -793,8 +796,8 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             swin.showSlice(cSlice + count);
         }
 //        OverAllProgressBar.setValue(imp.getCurrentSlice());
-
-        OverAllProgressBar.setValue(OverAllProgressBar.getValue() + advance);
+        currFramePosition = OverAllProgressBar.getValue() + advance;
+        OverAllProgressBar.setValue(currFramePosition);
         runningStatus = false;
 
     }
