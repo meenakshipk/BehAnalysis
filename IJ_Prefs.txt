@@ -1,5 +1,5 @@
 #ImageJ 1.53k Preferences
-#Tue Oct 12 12:36:35 IST 2021
+#Tue Oct 12 12:44:37 IST 2021
 showcolor=\#00FFFF
 prefs.options=16416
 div-by-zero=Infinity

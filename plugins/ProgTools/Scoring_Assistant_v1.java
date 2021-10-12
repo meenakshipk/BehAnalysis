@@ -346,7 +346,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
                 buffFrames = (int) (0.4 * nFrames);     //effectively buffersize is 0.2 of memsize
                 Calibration cal = imp.getCalibration();
                 cal.fps = vr.fps;
-                System.out.println("imageplus fps: " + imp.getCalibration().fps);
+//                System.out.println("imageplus fps: " + imp.getCalibration().fps);
                 imp.show();
                 IJ.showStatus("Image stack ready");
             }
@@ -584,26 +584,27 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
             } else {
                 if (!vr.isNextChunkReady()) {                                                //make sure if the previously read frames are not still present
                     //and image frame buffer is empty. 
-                    System.out.println("Starting new thread in 1");
+//                    System.out.println("Starting new thread in 1");
                     new Thread(vr).start();                                                 // fetch the frames for  next chunk
-                } else {
-                    System.out.println("Chunck is existing so not populating with new frames");
-                }
+                } 
+//                else {
+//                    System.out.println("Chunck is existing so not populating with new frames");
+//                }
             }
         }
         if (cSlice >= maxBound) {                                                               //time to add more frames from buffer if they are available
-            System.out.println("entered nFrames > maxBound if block");
+//            System.out.println("entered nFrames > maxBound if block");
             if (!vr.isNextChunkReady()) {
                 if (vr.isEof()) {
-                    System.out.println("End of File reached check at position 2");
+//                    System.out.println("End of File reached check at position 2");
                     if (imp.getCurrentSlice() >= StackSz) //can never be greater it is sufficient to check for ==
                     {
                         return;
                     }
                 }
-                System.out.println("SR chunkready = FALSE" + vr.isNextChunkReady());
+//                System.out.println("SR chunkready = FALSE" + vr.isNextChunkReady());
                 try {
-                    System.out.println("try sleep block");
+//                    System.out.println("try sleep block");
                     IJ.showStatus("Waiting for next set of video freames.");
                     this.wait(1000);
                     //Thread.currentThread().wait(1000); //timeout =1s //thread synchronization issue?
@@ -616,22 +617,22 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
                     return;
                 }
             }
-            System.out.println("SR chunkready = TRUE" + vr.isNextChunkReady());
-            System.out.println("@beginging of chuncking sizes returned by image plus getStackSz is  " + imp.getStackSize() + " and from Stack getsize " + Stack.getSize());
-            System.out.println("The number of frames to fectch/add " + frames2Add);
-            //int oldcSlice = cSlice;
+//            System.out.println("SR chunkready = TRUE" + vr.isNextChunkReady());
+//            System.out.println("@beginging of chuncking sizes returned by image plus getStackSz is  " + imp.getStackSize() + " and from Stack getsize " + Stack.getSize());
+//            System.out.println("The number of frames to fectch/add " + frames2Add);
+//            //int oldcSlice = cSlice;
             int nDelSlices = 0;
             //ImageProcessor [] ipA = vr.getNextChunk();
 
             int sizeDiff = (StackSz + vr.getframesAdded()) - nFrames;
             if (sizeDiff > 0) {
                 nDelSlices = this.deletePreChunk(sizeDiff); //private method of scoring assistant that deletes the sizeDiff number of slices.
-                System.out.println("Deleted the prechunck");
+//                System.out.println("Deleted the prechunck");
                 cSlice -= nDelSlices;
-                System.out.println("Finished deleting the slices " + imp.getStackSize() + "from Stack " + Stack.getSize());
+//                System.out.println("Finished deleting the slices " + imp.getStackSize() + "from Stack " + Stack.getSize());
                 nAdded = this.addPostChunk(vr.getNextChunk());
                 if (!vr.isEof()) {
-                    System.out.println("Starting new thread in 2");
+//                    System.out.println("Starting new thread in 2");
                     new Thread(vr).start(); //will fetch the next chunk
                 }
 
@@ -639,10 +640,10 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
                 //       nAdded =  this.addPostChunk(vr.getNextChunk()); //private method of scoring assistant that adds  buffsize number of or remiang of slices.
                 //vr.clearChunk();
                 if (vr.isEof()) {
-                    System.out.println("End of File Reached check at position 3");
+//                    System.out.println("End of File Reached check at position 3");
                 } else {
                     //if(! vr.isChunkReady())
-                    System.out.println("Starting new thread in 2");
+//                    System.out.println("Starting new thread in 2");
                     new Thread(vr).start(); //will fetch the next chunk
                 }
             }
@@ -701,7 +702,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
         while (imp.isLocked()) {
             imp.unlock();
             if (++unlockattempts > 10) {
-                System.out.println("There is problem unlocking the imagestack exiting");
+//                System.out.println("There is problem unlocking the imagestack exiting");
                 return -1;
             }
 
@@ -712,7 +713,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
             if (ip != null) {
                 truncatedStack.addSlice(ip);
             } else {
-                System.out.println("null processor for the slice " + count + "newSz " + newSz);
+//                System.out.println("null processor for the slice " + count + "newSz " + newSz);
             }
         }
         //Stack.deleteSlice(count + 1);     //count + 1 shifts the counter to slice number (starts with 1) //inefficient as imsgej code shifts one slice at a time to create the code
@@ -769,11 +770,11 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
         public VideoReader(File ImgFile) {
             System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
             this.openVideo(ImgFile);
-            if (SwingUtilities.isEventDispatchThread()) {
-                System.out.print("This is Event Dispatch Thread");
-            } else {
-                System.out.print("This is not a Event Dispatch Thread");
-            }
+//            if (SwingUtilities.isEventDispatchThread()) {
+//                System.out.print("This is Event Dispatch Thread");
+//            } else {
+//                System.out.print("This is not a Event Dispatch Thread");
+//            }
         }
 
         @Override
@@ -782,14 +783,14 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
             if (!isEof()) {
                 //synchronized (this) {
                 setChunkReady(false);
-                System.out.println("VR chunkready1" + isChunkReady());
+//                System.out.println("VR chunkready1" + isChunkReady());
                 //}
                 //           if (success && read) {
                 ipArr = new ImageProcessor[buffFrames];
                 readFrames(buffFrames);
                 //synchronized (this) {
                 setChunkReady(true);
-                System.out.println("VR chunkready2" + isChunkReady());
+//                System.out.println("VR chunkready2" + isChunkReady());
                 //}
                 //           }
                 //              else {
@@ -799,7 +800,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
             } else {
                 //synchronized (this) {
                 setChunkReady(false);
-                System.out.println("VR chunkready1" + isChunkReady());
+//                System.out.println("VR chunkready1" + isChunkReady());
                 // }
             }
         }
@@ -807,7 +808,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
         public void openVideo(File ImgFile) {
             cap = new VideoCapture(ImgFile.getAbsolutePath());
             if (cap.isOpened()) {
-                System.out.println("Video opened.");
+//                System.out.println("Video opened.");
                 //read video file using opencv
                 height = cap.get(CAP_PROP_FRAME_HEIGHT); //height
 //height
@@ -820,7 +821,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
 
                 fps = cap.get(CAP_PROP_FPS); //25
                 totalFrames = cap.get(CAP_PROP_FRAME_COUNT); //3715 <- checks out - got 3700 for 2.28 vid of 25fps         
-                System.out.println("Height: " + height + " width: " + width + " FPS: " + fps + "total frame count: " + getTotalFrames());
+//                System.out.println("Height: " + height + " width: " + width + " FPS: " + fps + "total frame count: " + getTotalFrames());
                 success = true;
             } else {
                 success = false;
@@ -850,8 +851,8 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
             BufferedImage buff = null;
             read = cap.read(image);
             this.incPosFrame();
-            System.out.println("read: " + read);
-            System.out.println("posFrame: " + getPosFrame());
+//            System.out.println("read: " + read);
+//            System.out.println("posFrame: " + getPosFrame());
 
             //calculate required number of frames for init stack
             nFrames = (int) (mainChunkSize / (image.elemSize() * image.width() * image.height()));
@@ -937,7 +938,7 @@ public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListene
             this.framesinBuff = idx;
             setEof(!read);
 
-            System.out.println("last frame read is " + this.getPosFrame());
+//            System.out.println("last frame read is " + this.getPosFrame());
             return readFrames;
         }
 
