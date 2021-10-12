@@ -1,5 +1,5 @@
 #ImageJ 1.53k Preferences
-#Fri Oct 01 15:39:29 IST 2021
+#Tue Oct 12 12:36:35 IST 2021
 showcolor=\#00FFFF
 prefs.options=16416
 div-by-zero=Infinity
@@ -15,7 +15,7 @@ new.slices=1
 jpeg=75
 ij.x=742
 raw.n=1
-ij.y=6
+ij.y=10
 ap.options=64
 pp.height=340
 measurements=19

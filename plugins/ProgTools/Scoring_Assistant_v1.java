@@ -6,11 +6,11 @@ package ProgTools;
  */
 
  /*
- * Scoring_Assistant_0a.java
+ * Scoring_Assistant_v1.java
  *
- * Created on Apr 19, 2011, 4:48:42 PM
  */
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.ImageCanvas;
@@ -47,9 +47,11 @@ import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_WIDTH;
 
 /**
  *
- * @author Every one
+ * @author Meenakshi P. and J. Balaji
+ * Neurodynamics lab, CNS, IISc
  */
-public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListener, KeyListener, Runnable {
+
+public class Scoring_Assistant_v1 extends java.awt.Frame implements MouseListener, KeyListener, Runnable {
 
     File DataFile, ImgFile = null;
     ImageStack Stack = null;
@@ -78,7 +80,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
     /**
      * Creates new form Scoring_Assistant
      */
-    public Scoring_Assistant_0a() {
+    public Scoring_Assistant_v1() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -107,29 +109,23 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         NxtSeq = new javax.swing.JButton();
         AutoAdvStat = new javax.swing.JCheckBox();
         DoneScoring = new javax.swing.JButton();
-        nImgs = new javax.swing.JTextField();
-        jLabel1 = new javax.swing.JLabel();
-        jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         nImgAdv = new javax.swing.JTextField();
         jLabel4 = new javax.swing.JLabel();
-        mThreshold = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
-        nConsecutive = new javax.swing.JTextField();
         DataBrowse = new javax.swing.JButton();
-        ResultBrowse = new javax.swing.JButton();
         Score = new javax.swing.JButton();
         nPeople = new javax.swing.JSpinner();
-        SetBgd = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
-        SubBgd = new javax.swing.JButton();
+        jLabel8 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
 
-        Progress.setTitle("Progress..");
+        Progress.setTitle("Scoring Status");
+        Progress.setAlwaysOnTop(true);
         Progress.setBounds(new java.awt.Rectangle(0, 0, 450, 250));
+        Progress.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
-        jLabel6.setText("Over All Progress");
+        jLabel6.setText("Overall Progress");
 
-        jLabel7.setText("Progress in sequence..");
+        jLabel7.setText("Sequence Progress");
 
         jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("Seq. Navigation"));
 
@@ -206,7 +202,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                 .addGroup(ProgressLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(ProgressLayout.createSequentialGroup()
                         .addGap(18, 18, 18)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(27, 27, 27))
                     .addGroup(ProgressLayout.createSequentialGroup()
                         .addGap(56, 56, 56)
@@ -214,7 +210,10 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                         .addContainerGap())))
         );
 
+        jPanel1.getAccessibleContext().setAccessibleName("Sequence Navigation");
+
         setBackground(new java.awt.Color(236, 233, 216));
+        setBounds(new java.awt.Rectangle(0, 0, 400, 300));
         setTitle("Scoring Assistant");
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -222,17 +221,11 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             }
         });
 
-        jLabel1.setText("Number of Images to score");
-
-        jLabel2.setText("Motion Threshold");
-
-        jLabel3.setText("Number of frames to advance");
+        jLabel3.setText("Number of frames to advance:");
 
         nImgAdv.setText("5");
 
-        jLabel4.setText("Number of people scoring");
-
-        jLabel5.setText("Number of consecutive frames");
+        jLabel4.setText("Number of people scoring:");
 
         DataBrowse.setText("Select Data file");
         DataBrowse.addActionListener(new java.awt.event.ActionListener() {
@@ -241,14 +234,9 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             }
         });
 
-        ResultBrowse.setText("Export Results File");
-        ResultBrowse.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                ResultBrowseActionPerformed(evt);
-            }
-        });
-
-        Score.setText("Start_Scoring");
+        Score.setText("Start Scoring");
+        Score.setToolTipText("");
+        Score.setActionCommand("Start Scoring");
         Score.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 ScoreActionPerformed(evt);
@@ -257,21 +245,9 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
 
         nPeople.setModel(new javax.swing.SpinnerNumberModel(1, 0, 2, 1));
 
-        SetBgd.setText("Select Background");
-        SetBgd.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                SetBgdActionPerformed(evt);
-            }
-        });
+        jLabel8.setText("Total number of frames:");
 
-        jButton1.setText("Generate Background");
-
-        SubBgd.setText("Substract BackGround");
-        SubBgd.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                SubBgdActionPerformed(evt);
-            }
-        });
+        jLabel9.setText("FPS:");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -280,73 +256,48 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             .addGroup(layout.createSequentialGroup()
                 .addGap(31, 31, 31)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel5)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel4))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(nConsecutive, 0, 1, Short.MAX_VALUE)
-                        .addComponent(mThreshold, 0, 1, Short.MAX_VALUE)
-                        .addComponent(nImgAdv, javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(nImgs, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(nPeople, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(17, 17, 17))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(21, 21, 21)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER, false)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(DataBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(SetBgd, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
+                        .addGap(29, 29, 29)
                         .addComponent(Score, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(ResultBrowse, javax.swing.GroupLayout.PREFERRED_SIZE, 127, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(SubBgd)
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel4))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 175, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(nImgAdv, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(nPeople, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(17, 17, 17))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel9)
+                            .addComponent(jLabel8))
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(92, 92, 92)
+                .addGap(33, 33, 33)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel3)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(18, 18, 18)
-                        .addComponent(jLabel3))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(nImgs, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
+                        .addGap(6, 6, 6)
                         .addComponent(nImgAdv, javax.swing.GroupLayout.PREFERRED_SIZE, 20, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(nPeople, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel4))
-                        .addGap(34, 34, 34)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(mThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel2))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(nConsecutive, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel5))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 29, Short.MAX_VALUE)
+                            .addComponent(jLabel4))))
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(DataBrowse)
-                    .addComponent(SetBgd)
-                    .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 23, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(Score))
+                .addGap(45, 45, 45)
+                .addComponent(jLabel8)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(Score)
-                    .addComponent(ResultBrowse)
-                    .addComponent(SubBgd))
-                .addGap(47, 47, 47))
+                .addComponent(jLabel9)
+                .addContainerGap(79, Short.MAX_VALUE))
         );
 
         pack();
@@ -370,6 +321,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         if (result == Fc.APPROVE_OPTION) {
             ImgFile = Fc.getSelectedFile();
             if (ImgFile.exists() && ImgFile.isFile()) {
+                IJ.showStatus("Reading file");
                 // imp = new ImagePlus(ImgFile.getPath());
                 //estimate size of memory available in imagej
                 //initialise buffer size
@@ -378,11 +330,14 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                 // open file using opencv
                 vr = new VideoReader(ImgFile);
                 Error = !vr.initMainStack((int) mainChunkSize);
+                jLabel9.setText("FPS: " + Integer.toString((int) vr.fps));
+                jLabel8.setText("Total number of frames: " + Integer.toString((int) vr.totalFrames));
             } else {
                 Error = true;
             }
             if (!Error) {
-                imp = new ImagePlus();
+                IJ.showStatus("Creating image stack");
+                imp = new ImagePlus(ImgFile.getName());                
                 Stack = imp.createEmptyStack();
                 addPostChunk(vr.getNextChunk());
                 // vr.clearChunk();
@@ -393,16 +348,12 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                 cal.fps = vr.fps;
                 System.out.println("imageplus fps: " + imp.getCalibration().fps);
                 imp.show();
+                IJ.showStatus("Image stack ready");
             }
         } else {
             Error = true;
         }
     }//GEN-LAST:event_DataBrowseActionPerformed
-
-    private void ResultBrowseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ResultBrowseActionPerformed
-        //To do
-
-    }//GEN-LAST:event_ResultBrowseActionPerformed
 
     private void ScoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ScoreActionPerformed
 
@@ -457,37 +408,6 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
 
     }//GEN-LAST:event_AutoAdvStatActionPerformed
 
-    private void SetBgdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SetBgdActionPerformed
-        JFileChooser FC = new JFileChooser();
-        int result = FC.showOpenDialog(null);
-
-        if (result == FC.APPROVE_OPTION) {
-            BgdFile = FC.getSelectedFile();
-            if (BgdFile.exists() && BgdFile.isFile()) {
-                bgdimp = new ImagePlus(BgdFile.getPath());
-
-            }
-            if (bgdimp == null) {
-                Error = true;
-            } else {
-
-                Stack = bgdimp.getImageStack();
-                int bgdSz = Stack.getSize();
-                if (nFrames < bgdSz) {
-                    ij.IJ.showMessage("Error: Stack mismatch", "The number of frames in background does not match the image stack. Using the first slice and ignoring the rest");
-                    while (Stack.getSize() > 1) {
-                        Stack.deleteLastSlice();
-                    }
-                }
-                bgdimp.show();
-            }
-        } else {
-            Error = true;
-        }
-
-        // TODO add your handling code here:
-    }//GEN-LAST:event_SetBgdActionPerformed
-
     private void NxtSeqActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NxtSeqActionPerformed
         // TODO add your handling code here:
 //        OverAllProgressBar.setValue(imp.getCurrentSlice());
@@ -511,35 +431,6 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
 
     }//GEN-LAST:event_NxtSeqActionPerformed
 
-    private void SubBgdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SubBgdActionPerformed
-
-        int bSlices = bgdimp.getCurrentSlice();
-        ImagePlus curSlice;
-        ImageStack Stack = imp.getStack();
-        ImageStack resStack = new ImageStack(Stack.getWidth(), Stack.getHeight());
-        ImageCalculator Calc = new ImageCalculator();
-        String imageTitle = imp.getTitle();
-        Calibration cal = imp.getCalibration();
-        int maxSlice = Stack.getSize();
-        boolean status = true;
-        if (bSlices == 1) {
-            for (int count = 1; count < maxSlice && status; count++) {
-                curSlice = new ImagePlus(imageTitle, Stack.getProcessor(count));
-                curSlice = Calc.run("Difference create", curSlice, bgdimp);
-
-                resStack.addSlice(imageTitle, curSlice.getProcessor());
-
-            }
-            while (imp.getCurrentSlice() > 1) {
-                Stack.deleteLastSlice();
-            }
-            imp.setStack(resStack);
-            imp.show();
-        } else {
-            new ImageCalculator().run("Difference stack", imp, bgdimp);
-        }
-    }//GEN-LAST:event_SubBgdActionPerformed
-
     private void DoneScoringActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DoneScoringActionPerformed
         // TODO add your handling code here:
         ImageWindow win = imp.getWindow();
@@ -554,11 +445,16 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
         String saveName = rt.getTitle() + "_" + name;
         boolean saved = rt.save(dir + File.separator + saveName + ".csv");
         if (saved) {
-            ij.IJ.showMessage("Save successful.", "Results table saved.");
-            
+            ij.IJ.showMessage("Save successful.", "Results table saved.");            
         } else {
             ij.IJ.showMessage("Error", "Error saving results table.");
         }
+        
+        this.Progress.dispose(); //close progress jframe
+        win.close(); //close imp showing vidoe frames
+        jLabel9.setText("FPS: ");
+        jLabel8.setText("Total number of frames: ");
+        initComponents(); //reinitialise class variables
     }//GEN-LAST:event_DoneScoringActionPerformed
 
 
@@ -569,24 +465,16 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
     private javax.swing.JButton NxtSeq;
     private javax.swing.JProgressBar OverAllProgressBar;
     private javax.swing.JFrame Progress;
-    private javax.swing.JButton ResultBrowse;
     private javax.swing.JButton Score;
     private javax.swing.JProgressBar SeqProgress;
-    private javax.swing.JButton SetBgd;
-    private javax.swing.JButton SubBgd;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
+    private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextField mThreshold;
-    private javax.swing.JTextField nConsecutive;
     private javax.swing.JTextField nImgAdv;
-    private javax.swing.JTextField nImgs;
     private javax.swing.JSpinner nPeople;
     // End of variables declaration//GEN-END:variables
 
@@ -720,7 +608,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                     this.wait(1000);
                     //Thread.currentThread().wait(1000); //timeout =1s //thread synchronization issue?
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(Scoring_Assistant_0a.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Scoring_Assistant_v1.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 if (!vr.isNextChunkReady()) {
                     IJ.showStatus("Error fetching video frames.");
@@ -787,7 +675,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                     timeDiff = nextime - time;
                     Thread.currentThread().sleep(timeDiff);
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(Scoring_Assistant_0a.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Scoring_Assistant_v1.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else {
                 Thread.currentThread().yield();
@@ -972,7 +860,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
             try {
                 buff = Mat2BufferedImage(image);
             } catch (IOException ex) {
-                Logger.getLogger(Scoring_Assistant_0a.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Scoring_Assistant_v1.class.getName()).log(Level.SEVERE, null, ex);
             }
             ImagePlus tempImp = new ImagePlus(String.valueOf(getPosFrame() + 1), buff);
 
@@ -1037,7 +925,7 @@ public class Scoring_Assistant_0a extends java.awt.Frame implements MouseListene
                     try {
                         buff = Mat2BufferedImage(image);
                     } catch (IOException ex) {
-                        Logger.getLogger(Scoring_Assistant_0a.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Scoring_Assistant_v1.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     tempImp = new ImagePlus(String.valueOf(idx + 1), buff);
                     ipArr[idx] = tempImp.getProcessor();
