@@ -9,13 +9,19 @@ package ProgTools;
  * Video_Tracker.java
  *
  */
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
+import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.ParticleAnalyzer;
+import ij.plugin.filter.ThresholdToSelection;
+import ij.plugin.frame.RoiManager;
 import ij.process.AutoThresholder;
 import ij.process.ByteProcessor;
+import ij.process.ImageProcessor;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -31,6 +37,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
+import static org.opencv.videoio.Videoio.CAP_PROP_POS_FRAMES;
 
 /**
  *
@@ -50,8 +57,9 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
     private ImagePlus impBgd;
     private ImagePlus impTrack;
     private ResultsTable rt;
+    private RoiManager roiMan;
     private Roi selection;
-
+    private int frameNo;
     /**
      * Creates new form video tracker
      */
@@ -104,6 +112,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
         });
 
         jButtonBgd.setText("Create Bgd");
+        jButtonBgd.setEnabled(false);
         jButtonBgd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonBgdActionPerformed(evt);
@@ -144,21 +153,21 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
         jLabel2.setText("Object parameters:");
         jLabel2.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
 
-        jTextFieldMinSize.setText("50");
+        jTextFieldMinSize.setText("100");
 
         jLabel3.setText("Minimum object size:");
 
-        jTextFieldMaxSize.setText("300");
+        jTextFieldMaxSize.setText("99999");
 
         jLabel4.setText("Maximum object size:");
 
         jLabel5.setText("Minimum object circularity:");
 
-        jTextFieldMinCirc.setText("0.5");
+        jTextFieldMinCirc.setText("0");
 
         jLabel6.setText("Maximum object circularity::");
 
-        jTextFieldMaxCirc.setText("0.8");
+        jTextFieldMaxCirc.setText("1");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -168,35 +177,38 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(16, 16, 16)
-                        .addComponent(jRadioButtonLive)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jRadioButtonFile)
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel6)
+                            .addComponent(jLabel5))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jTextFieldMaxSize, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
+                            .addComponent(jTextFieldMinCirc, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jTextFieldMaxCirc, javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jTextFieldMinSize))
+                        .addGap(72, 198, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
-                            .addComponent(jButtonTrack)
+                            .addComponent(jButtonTrack))
+                        .addGap(0, 326, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel4)
-                                    .addComponent(jLabel3)
-                                    .addComponent(jLabel6)
-                                    .addComponent(jLabel5)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jButtonStartMode)
-                                        .addGap(6, 6, 6)
-                                        .addComponent(jButtonBgd)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 9, Short.MAX_VALUE)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                    .addComponent(jTextFieldMaxSize, javax.swing.GroupLayout.DEFAULT_SIZE, 50, Short.MAX_VALUE)
-                                    .addComponent(jTextFieldMinCirc, javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jTextFieldMaxCirc, javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jTextFieldMinSize))
-                                .addGap(17, 17, 17)
+                                .addComponent(jLabel1)
+                                .addGap(16, 16, 16)
+                                .addComponent(jRadioButtonLive)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jRadioButtonFile))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jButtonStartMode)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButtonBgd)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(jButtonStopMode)))
-                        .addGap(0, 139, Short.MAX_VALUE))))
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -259,20 +271,44 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
         if (jRadioButtonLive.isSelected()) {
             //live tracking mode
             cap = new VideoCapture(0);
+            //start live feed
+            if (cap.isOpened()) {
+                modeStarted = true;
+                videoReader rawData = new videoReader();
+                (new Thread(rawData)).start();
+                jButtonBgd.setEnabled(true);
+            }
+
         } else if (jRadioButtonFile.isSelected()) {
             //file tracking mode
             JFileChooser fc = new JFileChooser();
             fc.showOpenDialog(this);
             File file = fc.getSelectedFile();
             cap = new VideoCapture(file.getPath());
+
+            //set Bgd Image
+            fc = new JFileChooser();
+            fc.showOpenDialog(this);
+            file = fc.getSelectedFile();
+            impBgd = new ImagePlus(file.getPath());
+            impBgd.setTitle("Background");
+            impBgd.show();
+        
+            if (cap.isOpened()) {
+                modeStarted = true;
+                videoReader rawData = new videoReader();
+                (new Thread(rawData)).start();
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                this.jButtonTrack.doClick();
+            }
+
         }
 
-        if (cap.isOpened()) {
-            modeStarted = true;
-            videoReader rawData = new videoReader();
-            (new Thread(rawData)).start();
 
-        }
     }//GEN-LAST:event_jButtonStartModeActionPerformed
 
     private void jButtonStopModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStopModeActionPerformed
@@ -282,17 +318,19 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
     }//GEN-LAST:event_jButtonStopModeActionPerformed
 
     private void jButtonTrackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTrackActionPerformed
-        // TODO add your handling code here:
         impBgd.hide();
+        //convert to 32-bit for tracking
+        impBgd.setProcessor(impBgd.getProcessor().convertToFloatProcessor());
         selection = impBgd.getRoi();
         if (selection != null) {
             impBgd.getProcessor().fillOutside(selection);
-            //    impBgd.show();
         }
         impTrack = new ImagePlus();
         rt = new ResultsTable();
+//        rt.show("Results");
+        roiMan = new RoiManager();                
         (new Thread(this)).start();
-        rt.show("Results");
+
     }//GEN-LAST:event_jButtonTrackActionPerformed
 
 
@@ -321,7 +359,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
      */
     @Override
     public synchronized void run() {
-//        System.out.println("Tracker code goes here");
+        //subtract images to enhance mouse object
         ImageCalculator ic = new ImageCalculator();
         int counter = 1;
         do {
@@ -330,48 +368,60 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
             while (imp.isLocked()) {
                 imp.unlock();
                 if (++unlockattempts > 10) {
-                    System.out.println("There is problem unlocking the imagestack exiting");
+                    System.out.println("There is problem unlocking the imagestack.");
                     return;
                 }
             }
             tempImp = ic.run("subtract create", imp, impBgd);
-            System.out.println("Thread#1: " + counter);
+//            System.out.println("Thread#1 tracker: " + counter);
 
-//            impTrack.setProcessor(tempImp.getProcessor());
             try {
-//                this.track(impTrack, counter);
-                track(tempImp, counter);
+                track(tempImp);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
             }
-//            impTrack.show();
+
             counter = counter + 1;
+
             try {
                 wait(100);
-                System.out.println("Forced wait");
+//                System.out.println("Forced wait");
             } catch (InterruptedException ex) {
                 Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
             }
         } while (modeStarted);
     }
 
-    private void track(ImagePlus imp, int frameNo) throws InterruptedException {
+    private void track(ImagePlus imp) throws InterruptedException {
 
         ByteProcessor byteip = imp.getProcessor().convertToByteProcessor();
 
         int[] hist = byteip.getHistogram();
         AutoThresholder at = new AutoThresholder();
-        int t = at.getThreshold(AutoThresholder.Method.MaxEntropy, hist);
+//        int t = at.getThreshold(AutoThresholder.Method.MaxEntropy, hist);
+        int t = at.getThreshold(AutoThresholder.Method.Default, hist);
 //        System.out.println("Threshold: " + t);
 
-        byteip.setThreshold(t, 255, 3);//255 is max for 8-bit image
-//        byteip.createMask();
-
-        impTrack.setProcessor(byteip);
-        impTrack.show();;
-        ParticleAnalyzer pa = new ParticleAnalyzer(ParticleAnalyzer.SHOW_RESULTS, ParticleAnalyzer.CENTER_OF_MASS, rt, 100, 10000, 0.5, 0.8);
-        boolean analyze = pa.analyze(impTrack);
-//        Thread.sleep(1000);
+            impTrack.setProcessor(byteip);
+//            byteip.setThreshold(t, 255, ByteProcessor.BLACK_AND_WHITE_LUT);//255 is max for 8-bit image
+            byteip.setThreshold(0, t, ByteProcessor.BLACK_AND_WHITE_LUT);//
+                
+        //PA settings
+        double minSize = Double.parseDouble(jTextFieldMinSize.getText());
+        double maxSize = Double.parseDouble(jTextFieldMaxSize.getText());
+        double minCirc = Double.parseDouble(jTextFieldMinCirc.getText());
+        double maxCirc = Double.parseDouble(jTextFieldMaxCirc.getText());
+        int options = ParticleAnalyzer.SHOW_RESULTS + ParticleAnalyzer.SHOW_SUMMARY 
+                + ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES + ParticleAnalyzer.INCLUDE_HOLES
+                + ParticleAnalyzer.ADD_TO_MANAGER +
+                + ParticleAnalyzer.IN_SITU_SHOW;
+        int measurements = Measurements.CENTER_OF_MASS; 
+        ParticleAnalyzer pa = new ParticleAnalyzer(options , measurements, rt, minSize, maxSize, minCirc, maxCirc);
+        ParticleAnalyzer.setRoiManager(roiMan);
+        ParticleAnalyzer.setResultsTable(rt);         //Bug: particle analyzer does not show XM and YM values in rt. WHY?
+        boolean analyze = pa.analyze(impTrack);        
+        impTrack.resetDisplayRange();
+        impTrack.show();
     }
 
     private class videoReader implements Runnable {
@@ -391,19 +441,24 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
                     Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 ImagePlus tempImp = new ImagePlus("Live feed", buff);
-
+                
+                //process for tracking
+                //-convert to 32-bit for tracking
+                //-set ROI
+                imp.setProcessor(tempImp.getProcessor().convertToFloatProcessor());
                 if (selection != null) {
-                    tempImp.getProcessor().fillOutside(selection);
+                    imp.getProcessor().fillOutside(selection);
                 }
-                imp.setProcessor(tempImp.getProcessor());
                 imp.show();
-                System.out.println("Thread#2: " + counter);
-
+//                System.out.println("Thread#2 reader: " + counter);
+                frameNo = (int) cap.get(CAP_PROP_POS_FRAMES);
+//                System.out.println("position frame no: " + frameNo);
+                
 //            System.out.println("Acquired frame");
                 counter = counter + 1;
                 try {
                     wait(10);
-                    System.out.println("Forced wait");
+//                    System.out.println("Forced wait");
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
                 }
