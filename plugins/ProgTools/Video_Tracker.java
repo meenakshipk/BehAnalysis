@@ -37,6 +37,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
+import static org.opencv.videoio.Videoio.CAP_PROP_FRAME_COUNT;
 import static org.opencv.videoio.Videoio.CAP_PROP_POS_FRAMES;
 
 /**
@@ -60,6 +61,9 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
     private RoiManager roiMan;
     private Roi selection;
     private int frameNo;
+    private videoReader rawData;
+    private Thread vidThread;
+
     /**
      * Creates new form video tracker
      */
@@ -261,22 +265,32 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
     }//GEN-LAST:event_exitForm
 
     private void jButtonBgdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonBgdActionPerformed
-        // TODO add your handling code here:
+if(jRadioButtonLive.isSelected()){
         impBgd = (ImagePlus) imp.clone();
+} else if(jRadioButtonFile.isSelected()){
+            //set Bgd Image
+           JFileChooser fc = new JFileChooser();
+            fc.showOpenDialog(this);
+            File file = fc.getSelectedFile();
+            impBgd = new ImagePlus(file.getPath());
+}
         impBgd.setTitle("Background");
         impBgd.show();
+
     }//GEN-LAST:event_jButtonBgdActionPerformed
 
     private void jButtonStartModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartModeActionPerformed
+                jButtonBgd.setEnabled(true);
+
         if (jRadioButtonLive.isSelected()) {
             //live tracking mode
             cap = new VideoCapture(0);
             //start live feed
             if (cap.isOpened()) {
                 modeStarted = true;
-                videoReader rawData = new videoReader();
-                (new Thread(rawData)).start();
-                jButtonBgd.setEnabled(true);
+                rawData = new videoReader();
+                vidThread = new Thread(rawData);
+                vidThread.start();
             }
 
         } else if (jRadioButtonFile.isSelected()) {
@@ -286,29 +300,14 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
             File file = fc.getSelectedFile();
             cap = new VideoCapture(file.getPath());
 
-            //set Bgd Image
-            fc = new JFileChooser();
-            fc.showOpenDialog(this);
-            file = fc.getSelectedFile();
-            impBgd = new ImagePlus(file.getPath());
-            impBgd.setTitle("Background");
-            impBgd.show();
-        
+
             if (cap.isOpened()) {
                 modeStarted = true;
-                videoReader rawData = new videoReader();
-                (new Thread(rawData)).start();
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                this.jButtonTrack.doClick();
+                rawData = new videoReader();
+                rawData.readCurrFrame();
+                System.out.println("Total no. of frames: " + cap.get(CAP_PROP_FRAME_COUNT));
             }
-
         }
-
-
     }//GEN-LAST:event_jButtonStartModeActionPerformed
 
     private void jButtonStopModeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStopModeActionPerformed
@@ -318,6 +317,13 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
     }//GEN-LAST:event_jButtonStopModeActionPerformed
 
     private void jButtonTrackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonTrackActionPerformed
+        vidThread = new Thread(rawData);
+        vidThread.start();
+                        try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+                }
         impBgd.hide();
         //convert to 32-bit for tracking
         impBgd.setProcessor(impBgd.getProcessor().convertToFloatProcessor());
@@ -328,7 +334,10 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
         impTrack = new ImagePlus();
         rt = new ResultsTable();
 //        rt.show("Results");
-        roiMan = new RoiManager();                
+        roiMan = new RoiManager();
+
+        
+
         (new Thread(this)).start();
 
     }//GEN-LAST:event_jButtonTrackActionPerformed
@@ -402,58 +411,36 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
         int t = at.getThreshold(AutoThresholder.Method.Default, hist);
 //        System.out.println("Threshold: " + t);
 
-            impTrack.setProcessor(byteip);
+        impTrack.setProcessor(byteip);
 //            byteip.setThreshold(t, 255, ByteProcessor.BLACK_AND_WHITE_LUT);//255 is max for 8-bit image
-            byteip.setThreshold(0, t, ByteProcessor.BLACK_AND_WHITE_LUT);//
-                
+        byteip.setThreshold(0, t, ByteProcessor.BLACK_AND_WHITE_LUT);//
+
         //PA settings
         double minSize = Double.parseDouble(jTextFieldMinSize.getText());
         double maxSize = Double.parseDouble(jTextFieldMaxSize.getText());
         double minCirc = Double.parseDouble(jTextFieldMinCirc.getText());
         double maxCirc = Double.parseDouble(jTextFieldMaxCirc.getText());
-        int options = ParticleAnalyzer.SHOW_RESULTS + ParticleAnalyzer.SHOW_SUMMARY 
-                + ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES + ParticleAnalyzer.INCLUDE_HOLES
-                + ParticleAnalyzer.ADD_TO_MANAGER +
-                + ParticleAnalyzer.IN_SITU_SHOW;
-        int measurements = Measurements.CENTER_OF_MASS; 
-        ParticleAnalyzer pa = new ParticleAnalyzer(options , measurements, rt, minSize, maxSize, minCirc, maxCirc);
+        int options = //ParticleAnalyzer.SHOW_RESULTS + ParticleAnalyzer.SHOW_SUMMARY +
+                 ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES + ParticleAnalyzer.INCLUDE_HOLES +
+                 ParticleAnalyzer.ADD_TO_MANAGER;
+        int measurements = Measurements.LABELS + Measurements.CENTER_OF_MASS;        
+        ParticleAnalyzer pa = new ParticleAnalyzer(options, measurements, rt, minSize, maxSize, minCirc, maxCirc);
         ParticleAnalyzer.setRoiManager(roiMan);
         ParticleAnalyzer.setResultsTable(rt);         //Bug: particle analyzer does not show XM and YM values in rt. WHY?
-        boolean analyze = pa.analyze(impTrack);        
+        boolean analyze = pa.analyze(impTrack);
+        rt.show(rt.getTitle());
         impTrack.resetDisplayRange();
-        impTrack.show();
+//        impTrack.show();
     }
 
     private class videoReader implements Runnable {
 
         @Override
         public synchronized void run() {
-            Mat image = new Mat();
-            BufferedImage buff = null;
-            boolean success = false;
             int counter = 1;
+            boolean success = false;
             do {
-                // read image to matrix
-                success = cap.read(image);
-                try {
-                    buff = Mat2BufferedImage(image);
-                } catch (IOException ex) {
-                    Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                ImagePlus tempImp = new ImagePlus("Live feed", buff);
-                
-                //process for tracking
-                //-convert to 32-bit for tracking
-                //-set ROI
-                imp.setProcessor(tempImp.getProcessor().convertToFloatProcessor());
-                if (selection != null) {
-                    imp.getProcessor().fillOutside(selection);
-                }
-                imp.show();
-//                System.out.println("Thread#2 reader: " + counter);
-                frameNo = (int) cap.get(CAP_PROP_POS_FRAMES);
-//                System.out.println("position frame no: " + frameNo);
-                
+                success = this.readCurrFrame();
 //            System.out.println("Acquired frame");
                 counter = counter + 1;
                 try {
@@ -476,6 +463,37 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
             InputStream in = new ByteArrayInputStream(byteArray);
             BufferedImage bufImage = ImageIO.read(in);
             return bufImage;
+        }
+
+        private boolean readCurrFrame() {
+            Mat image = new Mat();
+            BufferedImage buff = null;
+            boolean success = false;
+
+            // read image to matrix
+            success = cap.read(image);
+            if(success){
+                            try {
+                buff = Mat2BufferedImage(image);
+            } catch (IOException ex) {
+                Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            ImagePlus tempImp = new ImagePlus("Live feed", buff);
+
+            //process for tracking
+            //-convert to 32-bit for tracking
+            //-set ROI
+            imp.setProcessor(tempImp.getProcessor().convertToFloatProcessor());
+            if (selection != null) {
+                imp.getProcessor().fillOutside(selection);
+            }
+            imp.show();
+//                System.out.println("Thread#2 reader: " + counter);
+            frameNo = (int) cap.get(CAP_PROP_POS_FRAMES);
+            System.out.println("position frame no: " + frameNo);
+            imp.setTitle(String.valueOf(frameNo));
+            }
+            return success;
         }
     }
 }
