@@ -1,5 +1,5 @@
 #ImageJ 1.53k Preferences
-#Sat Nov 27 01:02:17 IST 2021
+#Sun Nov 28 02:36:18 IST 2021
 showcolor=\#00FFFF
 prefs.options=549470240
 div-by-zero=Infinity
@@ -10,7 +10,8 @@ raw.height=512
 raw.width=512
 new.fill=1
 raw.type=0
-recent00=C\:\\Users\\Meenakshi\\Desktop\\PROBE TRIAL6_WITH CUES_ DAY 17\\roi.roi
+recent01=C\:\\Users\\Meenakshi\\Desktop\\PROBE TRIAL6_WITH CUES_ DAY 17\\roi.roi
+recent00=C\:\\Users\\Meenakshi\\Desktop\\PROBE TRIAL5 WITHOUT CUES_DAY17\\04.fordataextraction\\roi.roi
 new.slices=1
 jpeg=85
 ij.x=597
@@ -26,11 +27,11 @@ bcolor=\#000000
 new.height=512
 fps=7.0
 pp.fontsize=14
-dir.image=C\:\\Users\\Meenakshi\\Desktop\\PROBE TRIAL6_WITH CUES_ DAY 17\\
+dir.image=C\:\\Users\\Meenakshi\\Desktop\\PROBE TRIAL5 WITHOUT CUES_DAY17\\New Folder\\
 new.type=0
 raw.options=0
 prefs.options2=2
-.results.loc=162,138
+.results.loc=168,335
 new.width=512
 roicolor=\#FFFF00
 .results.height=250
