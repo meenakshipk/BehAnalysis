@@ -6,6 +6,7 @@ import ij.gui.Roi;
 import ij.io.FileSaver;
 import ij.io.RoiEncoder;
 import ij.measure.CurveFitter;
+import ij.plugin.RoiEnlarger;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.process.AutoThresholder;
 import ij.process.FloatProcessor;
@@ -17,8 +18,7 @@ import javax.swing.table.DefaultTableModel;
 
 /**
  *
- * @author Meenakshi
- * Date: 2021.11.28
+ * @author Meenakshi Date: 2021.11.28
  */
 public class Beta_Imaging extends java.awt.Frame implements Runnable {
 
@@ -59,6 +59,8 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
         jTable = new javax.swing.JTable();
         jButtonUploadFiles = new javax.swing.JButton();
         jButtonCalculate = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        jTextFieldMaskSize = new javax.swing.JTextField();
 
         setBackground(new java.awt.Color(236, 233, 216));
         setBounds(new java.awt.Rectangle(0, 0, 400, 300));
@@ -110,6 +112,10 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
             }
         });
 
+        jLabel1.setText("Enlarge selection mask ROI by (pix):");
+
+        jTextFieldMaskSize.setText("0");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -121,7 +127,11 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jButtonUploadFiles)
-                            .addComponent(jButtonCalculate))
+                            .addComponent(jButtonCalculate)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldMaskSize, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -132,10 +142,16 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButtonUploadFiles)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(14, 14, 14)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(jTextFieldMaskSize, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButtonCalculate)
-                .addContainerGap(72, Short.MAX_VALUE))
+                .addContainerGap(43, Short.MAX_VALUE))
         );
+
+        jLabel1.getAccessibleContext().setAccessibleName("Enlarge selection mask ROI by (pix):");
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -237,9 +253,9 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
             roiArr[i] = thresholdedROI;
             //save ROI
             RoiEncoder.save(thresholdedROI, savedir + File.separator + "01.selectionMask" + File.separator + "Roi_slicePos_" + i + ".roi");
-            //save stack used for selectionroi creation - TO DO - clear outside using respective ROImask
-            String name = (String) jTable.getValueAt(xDatSize -1, 0);
-            new FileSaver(new ImagePlus(name,isForROI)).saveAsTiff(savedir + File.separator + "02.stackRegedStacks" + File.separator + name + "_inputForROImask.tif");
+            //save stack used for selectionroi creation - TO DO - clear outside using respective ROImask - for representation purpose
+            String name = (String) jTable.getValueAt(xDatSize - 1, 0);
+            new FileSaver(new ImagePlus(name, isForROI)).saveAsTiff(savedir + File.separator + "02.stackRegedStacks" + File.separator + name + "_inputForROImask.tif");
         }
 
 //        4.Beta fit in a diff thread
@@ -251,8 +267,10 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonCalculate;
     private javax.swing.JButton jButtonUploadFiles;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable;
+    private javax.swing.JTextField jTextFieldMaskSize;
     // End of variables declaration//GEN-END:variables
 
     @Override
@@ -276,10 +294,15 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
                         yData = new double[xDatSize];
                         for (int t = 0; t < xDatSize; t++) {
                             ip = ipArr[zPos][t];
-                            yData[t] = (double) ip.getPixelValue(x, y);
+                            float val = ip.getPixelValue(x, y);
+                            if (val == 0) {
+                                yData[t] = Double.NaN;
+                            } else {
+                                yData[t] = (double) val;
+                            }
                         }
                         //fit and store beta param
-                            betaImg[x][y] = this.fitBeta(xData, yData);
+                        betaImg[x][y] = this.fitBeta(xData, yData);
                     }
                 }
             }
@@ -292,7 +315,7 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
             new FileSaver(imp).saveAsTiff(savedir + File.separator + "03.BetaSliceImage_" + File.separator + imp.getTitle() + "_afterReg.tif");
             System.out.println(zPos + " beta slice generated");
         }
-        
+
         //save stack beta image file
         imp = new ImagePlus("Beta image Stack", betaImageStack);
         imp.show();
@@ -300,10 +323,10 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
         ij.IJ.showMessage("Done", "Beta fit completed.");
     }
 
-    //TO DO - check fit function
+    //TO DO - check matlab code for how to initialise parameters
     private float fitBeta(double[] xdata, double[] ydata) {
         //custom fit: Ref - https://doi.org/10.1016/j.bpj.2016.06.044
-        //String eq = "y = a + (b * x *(1-(c*x)))"; where a = beta and c = 3/8beta and b = 2/3??Vp
+        //String eq = "y = a + (b * x *(1-(c*x)))"; where a = constant, b = 2/3??Vp, and c = 3/8beta
 
         String eq = "y = a + (b * x *(1-(c*x)))";
         CurveFitter cf = new CurveFitter(xdata, ydata); //select data and initialize curve fitter
@@ -315,8 +338,8 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
         cf.doCustomFit(eq, initialParams, false); //custom-fit
         double[] para = cf.getParams(); //get fit parameters
         double beta = 0d;
-        if (cf.getStatus() == 0 && cf.getRSquared() > 0.7 && para[0] >= 0) {
-            beta = para[0]; //beta
+        if (cf.getStatus() == 0 && cf.getRSquared() > 0.7 && para[2] >= 0) {
+            beta = 3 / (8 * para[2]); //beta
         }
 //        System.out.println("beta value = " + beta + " r-sq = " + cf.getRSquared());
         return (float) beta;
@@ -327,6 +350,9 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
         ip.setAutoThreshold(AutoThresholder.Method.Triangle, true, ImageProcessor.NO_LUT_UPDATE);
         ThresholdToSelection tts = new ThresholdToSelection();
         Roi thresholdedROI = tts.convert(ip);
+        //TO DO - edit > selection > enlarge
+        double enlargePix = Double.parseDouble(jTextFieldMaskSize.getText());
+        thresholdedROI = RoiEnlarger.enlarge(thresholdedROI, enlargePix);
         return thresholdedROI;
     }
 }
