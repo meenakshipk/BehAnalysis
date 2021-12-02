@@ -6,7 +6,7 @@ package ProgTools;
  */
 
  /*
- * Video_Tracker.java
+ * Video_Tracker_v1.java
  *
  */
 import ij.ImagePlus;
@@ -40,11 +40,8 @@ import static org.opencv.videoio.Videoio.CAP_PROP_POS_FRAMES;
  *
  * @author Meenakshi P. Neurodynamics lab, CNS, IISc
  *
- * Notes to self: - imp.setTitle(frameNo) is not being reflected in results
- * table label. - currently 426 of 953 frames. Modify such that all frames are
- * tracked.
  */
-public class Video_Tracker extends java.awt.Frame implements Runnable {
+public class Video_Tracker_v1 extends java.awt.Frame implements Runnable {
 
     private VideoCapture cap;
     private final ImagePlus imp = new ImagePlus();
@@ -61,7 +58,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
     /**
      * Creates new form video tracker
      */
-    public Video_Tracker() {
+    public Video_Tracker_v1() {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -376,7 +373,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
             try {
                 track(tempImp);
             } catch (InterruptedException ex) {
-                Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Video_Tracker_v1.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             counter = counter + 1;
@@ -385,7 +382,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
 //                wait(100);
 ////                System.out.println("Forced wait");
 //            } catch (InterruptedException ex) {
-//                Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+//                Logger.getLogger(Video_Tracker_v1.class.getName()).log(Level.SEVERE, null, ex);
 //            }
 //        } while (modeStarted);
 
@@ -438,7 +435,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
 //                    wait(10);
 ////                    System.out.println("Forced wait");
 //                } catch (InterruptedException ex) {
-//                    Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+//                    Logger.getLogger(Video_Tracker_v1.class.getName()).log(Level.SEVERE, null, ex);
 //                }
             } while (modeStarted && success);
             modeStarted = false;
@@ -466,7 +463,7 @@ public class Video_Tracker extends java.awt.Frame implements Runnable {
                 try {
                     buff = Mat2BufferedImage(image);
                 } catch (IOException ex) {
-                    Logger.getLogger(Video_Tracker.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Video_Tracker_v1.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 ImagePlus tempImp = new ImagePlus("Live feed", buff);
 

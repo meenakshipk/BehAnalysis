@@ -1,5 +1,5 @@
 #ImageJ 1.53k Preferences
-#Mon Nov 29 19:23:52 IST 2021
+#Thu Dec 02 19:25:33 IST 2021
 precision=3
 fcolor=\#FFFFFF
 raw.width=512
@@ -43,7 +43,6 @@ measurements=19
 noise.sd=25.0
 new.height=512
 fps=7.0
-threads=4
 .log.loc=483,129
 recent09=F\:\\00.BetaInVivo\\ROI 2\\day 1\\output\\02.stackRegedStacks\\zPosSlice_2_afterReg.tif
 .threshold.loc=524,199
