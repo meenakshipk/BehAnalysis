@@ -324,6 +324,7 @@ public class Beta_Imaging extends java.awt.Frame implements Runnable {
     }
 
     //TO DO - check matlab code for how to initialise parameters
+    //TO DO - make a P(3) image as well as a chi-sq image 
     private float fitBeta(double[] xdata, double[] ydata) {
         //custom fit: Ref - https://doi.org/10.1016/j.bpj.2016.06.044
         //String eq = "y = a + (b * x *(1-(c*x)))"; where a = constant, b = 2/3??Vp, and c = 3/8beta
